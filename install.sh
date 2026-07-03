@@ -51,8 +51,20 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-EXTRA_ARGS=("--agent" "$AGENTS" "--yes")
-[[ $USE_COPY -eq 1 ]] && EXTRA_ARGS+=("--copy")
+# Arma EXTRA_ARGS a partir de AGENTS (csv). `npx skills` NO acepta lista
+# separada por comas en un solo --agent: hay que repetir --agent por agente.
+build_extra_args() {
+  EXTRA_ARGS=()
+  local a
+  IFS=',' read -ra _agents <<< "$AGENTS"
+  for a in "${_agents[@]}"; do
+    [[ -n "$a" ]] && EXTRA_ARGS+=("--agent" "$a")
+  done
+  EXTRA_ARGS+=("--yes")
+  [[ $USE_COPY -eq 1 ]] && EXTRA_ARGS+=("--copy")
+  return 0
+}
+build_extra_args
 
 matches_filter() {
   local value="$1" csv="$2"
@@ -327,17 +339,12 @@ pick_and_install() {
   done
 }
 
-# Agentes validos de `npx skills` (claude-code y opencode primero, pre-marcados).
+# Agentes comunes para el picker (caben en pantalla; claude-code y opencode
+# primero, pre-marcados). La lista completa de `npx skills` tiene ~72 agentes
+# — para usar uno que no este aca, corre con --agents nombre1,nombre2.
 ALL_AGENTS=(
   claude-code opencode cursor windsurf zed gemini-cli github-copilot codex
-  cline roo continue aider-desk amp antigravity antigravity-cli astrbot
-  autohand-code augment bob openclaw codearts-agent codebuddy codemaker
-  codestudio command-code cortex crush deepagents devin dexto droid eve
-  firebender forgecode goose hermes-agent inference-sh jazz junie iflow-cli
-  kilo kimi-code-cli kiro-cli kode lingma loaf mcpjam mistral-vibe moxby mux
-  openhands ona pi qoder qoder-cn qwen-code replit reasonix rovodev tabnine-cli
-  terramind tinycloud trae trae-cn warp zencoder zenflow neovate pochi
-  promptscript adal universal
+  cline roo continue aider-desk amp goose crush warp universal
 )
 
 # Picker de agentes destino -> setea AGENTS (csv) y reconstruye EXTRA_ARGS.
@@ -368,8 +375,7 @@ pick_agents() {
   else
     AGENTS="$(IFS=,; echo "${chosen[*]}")"
   fi
-  EXTRA_ARGS=("--agent" "$AGENTS" "--yes")
-  [[ $USE_COPY -eq 1 ]] && EXTRA_ARGS+=("--copy")
+  build_extra_args
   echo "Agentes: $AGENTS"
 }
 
