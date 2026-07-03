@@ -1,0 +1,29 @@
+# catalogo de skills. formato: categoria|repo|skill|scope|stack
+# categorias: frontend, backend, tools (agrega mas segun necesites)
+# scope: global (cualquier repo) | project (solo repos de ese stack)
+# stack: nombre de bloque para el picker interactivo (- si scope=global)
+tools|https://github.com/vercel-labs/skills|find-skills|global|-
+frontend|https://github.com/anthropics/skills|frontend-design|global|-
+tools|https://github.com/github/awesome-copilot|javascript-typescript-jest|global|-
+frontend|https://github.com/vercel-labs/agent-skills|vercel-react-best-practices|project|React
+frontend|https://github.com/nuxt/ui|nuxt-ui|project|Vue
+frontend|https://github.com/vercel-labs/json-render|vue|project|Vue
+frontend|https://github.com/vercel-labs/json-render|react|project|React
+backend|https://github.com/spatie/guidelines-skills|spatie-laravel-php|project|Laravel
+backend|https://github.com/grafana/skills|database-observability|project|Database
+tools|https://github.com/obra/superpowers|brainstorming|global|-
+tools|https://github.com/obra/superpowers|systematic-debugging|global|-
+tools|https://github.com/wshobson/agents|error-handling-patterns|global|-
+tools|https://github.com/obra/superpowers|test-driven-development|global|-
+tools|https://github.com/obra/superpowers|using-superpowers|global|-
+backend|https://github.com/wshobson/agents|api-design-principles|global|-
+tools|https://github.com/mattpocock/skills|grill-me|global|-
+frontend|https://github.com/dammyjay93/interface-design|interface-design|global|-
+frontend|https://github.com/nextlevelbuilder/ui-ux-pro-max-skill|ui-ux-pro-max|global|-
+frontend|https://github.com/vercel-labs/agent-skills|web-design-guidelines|global|-
+frontend|https://github.com/hyf0/vue-skills|vue-best-practices|project|Vue
+frontend|https://github.com/wshobson/agents|nextjs-app-router-patterns|project|Next.js
+backend|https://github.com/jeffallan/claude-skills|laravel-specialist|project|Laravel
+backend|https://github.com/sickn33/antigravity-awesome-skills|nodejs-best-practices|project|Node.js
+backend|https://github.com/wshobson/agents|nodejs-backend-patterns|project|Node.js
+tools|https://github.com/wshobson/agents|modern-javascript-patterns|global|-
