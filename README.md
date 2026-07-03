@@ -43,7 +43,7 @@ Cada entrada corre:
 npx skills add <repo> --skill <skill> --agent claude-code,opencode --yes [--global]   # --global solo si scope=global
 ```
 
-**Agentes destino:** por defecto `claude-code,opencode` (los que usas). Cambialo con `--agents a1,a2` o editando `AGENTS` en `install.sh`. Nombres validos: ver salida de un `npx skills add <repo> --agent x` (lista todos). Instalar a agentes que no soportan global (ej. Eve, PromptScript) solo genera un aviso inofensivo — no es un error.
+**Agentes destino:** en modo interactivo, el script arranca con un **picker de agentes** (checkboxes) con `claude-code` y `opencode` pre-marcados; marca/desmarca los que quieras. Sin modo interactivo, se usa `--agents a1,a2` (default `claude-code,opencode`) o editas `AGENTS` en `install.sh`. Instalar a agentes que no soportan global (ej. Eve, PromptScript) solo genera un aviso inofensivo — no es un error.
 
 ## Windows
 

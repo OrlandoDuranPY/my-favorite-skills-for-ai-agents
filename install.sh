@@ -327,7 +327,56 @@ pick_and_install() {
   done
 }
 
+# Agentes validos de `npx skills` (claude-code y opencode primero, pre-marcados).
+ALL_AGENTS=(
+  claude-code opencode cursor windsurf zed gemini-cli github-copilot codex
+  cline roo continue aider-desk amp antigravity antigravity-cli astrbot
+  autohand-code augment bob openclaw codearts-agent codebuddy codemaker
+  codestudio command-code cortex crush deepagents devin dexto droid eve
+  firebender forgecode goose hermes-agent inference-sh jazz junie iflow-cli
+  kilo kimi-code-cli kiro-cli kode lingma loaf mcpjam mistral-vibe moxby mux
+  openhands ona pi qoder qoder-cn qwen-code replit reasonix rovodev tabnine-cli
+  terramind tinycloud trae trae-cn warp zencoder zenflow neovate pochi
+  promptscript adal universal
+)
+
+# Picker de agentes destino -> setea AGENTS (csv) y reconstruye EXTRA_ARGS.
+pick_agents() {
+  local mt_type=() mt_label=() mt_default=() mt_selected=() mt_idx_of_pos=()
+  mt_type+=("header"); mt_label+=("Agentes destino (pre-marcados: claude-code, opencode):"); mt_default+=("0")
+  local a def
+  for a in "${ALL_AGENTS[@]}"; do
+    def=0
+    [[ ",$AGENTS," == *",$a,"* ]] && def=1
+    mt_type+=("item"); mt_label+=("$a"); mt_default+=("$def")
+  done
+
+  echo
+  if ! checkbox_select; then
+    numeric_select
+  fi
+
+  local chosen=() j item_pos=0
+  for j in "${!mt_type[@]}"; do
+    [[ "${mt_type[$j]}" == "item" ]] || continue
+    [[ "${mt_selected[$j]:-0}" == "1" ]] && chosen+=("${ALL_AGENTS[$item_pos]}")
+    item_pos=$((item_pos + 1))
+  done
+
+  if [[ ${#chosen[@]} -eq 0 ]]; then
+    echo "No elegiste ningun agente. Uso el default: $AGENTS"
+  else
+    AGENTS="$(IFS=,; echo "${chosen[*]}")"
+  fi
+  EXTRA_ARGS=("--agent" "$AGENTS" "--yes")
+  [[ $USE_COPY -eq 1 ]] && EXTRA_ARGS+=("--copy")
+  echo "Agentes: $AGENTS"
+}
+
 # --- modo interactivo ---
+pick_agents
+
+echo
 echo "Instalar: [1] Global  [2] Project (por stack)  [3] Ambos"
 read -rp "Opcion: " choice
 
