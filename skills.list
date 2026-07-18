@@ -27,3 +27,5 @@ backend|https://github.com/jeffallan/claude-skills|laravel-specialist|project|La
 backend|https://github.com/sickn33/antigravity-awesome-skills|nodejs-best-practices|project|Node.js
 backend|https://github.com/wshobson/agents|nodejs-backend-patterns|project|Node.js
 tools|https://github.com/wshobson/agents|modern-javascript-patterns|global|-
+tools|https://github.com/getpaperclipai/paperclip|design-guide|global|-
+tools|https://github.com/github/awesome-copilot|create-readme|global|-
