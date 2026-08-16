@@ -79,3 +79,19 @@ Corre `./install.sh --category <esa-categoria>` para instalarla.
 ```bash
 npx skills add <repo> --skill <skill> --agent '*' --global --yes
 ```
+
+## Plugins de Claude Code (mecanismo distinto a skills)
+
+Ademas de skills (`npx skills add`), Claude Code soporta **plugins** instalables desde un marketplace, via su propio CLI:
+
+```bash
+claude plugin install <plugin>@<marketplace>
+```
+
+Ejemplo:
+
+```bash
+claude plugin install security-guidance@claude-plugins-official
+```
+
+Esto no pasa por `skills.list` ni por `install.sh` — es una instalacion directa al agente, no cataloga en este repo. Si un plugin se vuelve parte fija del setup, documentar el comando aqui manualmente.
