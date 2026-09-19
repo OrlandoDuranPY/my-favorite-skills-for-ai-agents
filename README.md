@@ -27,11 +27,13 @@ Requiere `npx` (Node).
 ./install.sh --scope global        # no interactivo: TODAS las globales, sin preguntar
 ./install.sh --scope project       # no interactivo: TODAS las de project, sin preguntar
 ./install.sh --category frontend   # no interactivo: instala solo una categoria
+./install.sh --update              # actualiza las skills YA instaladas (global + project del dir actual)
+./install.sh --update --scope global  # actualiza solo las globales
 ./install.sh --dry-run             # muestra los comandos sin ejecutarlos (combinable con el modo interactivo)
 ./install.sh --copy                # copia archivos en vez de symlink
 ```
 
-Modo interactivo (default, sin flags): pregunta global/project/ambos, y por cada bloque (categoria en global, stack en project) muestra las skills individuales + una opcion "todas de este bloque", ademas de "TODAS" general.
+Modo interactivo (default, sin flags): pregunta global/project/ambos (o [4] actualizar las ya instaladas), y por cada bloque (categoria en global, stack en project) muestra las skills individuales + una opcion "todas de este bloque", ademas de "TODAS" general.
 
 Seleccion con checkboxes (terminal real): flechas arriba/abajo mueven el cursor, **espacio** marca/desmarca, `a` marca/desmarca todo, Enter confirma, `q` cancela. Si no hay TTY disponible (input por pipe, script no interactivo), cae automaticamente a seleccion por numeros separados por coma.
 

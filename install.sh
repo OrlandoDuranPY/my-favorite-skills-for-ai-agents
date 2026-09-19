@@ -13,6 +13,7 @@ CATEGORIES=""   # vacio = todas
 SCOPES=""       # vacio = todos (global, project)
 DRY_RUN=0
 LIST_ONLY=0
+UPDATE_ONLY=0
 INTERACTIVE=1   # se desactiva si el usuario pasa --category/--scope/--list
 AGENTS="claude-code,opencode"   # agentes destino (nombres de `npx skills`)
 USE_COPY=0
@@ -30,6 +31,9 @@ project- con checkboxes: flechas para moverte, espacio marca/desmarca,
   --scope global|project   Instala solo ese scope (default: ambos), no interactivo
   --agents a1,a2       Agentes destino (default: $AGENTS). Ver 'npx skills' para nombres validos
   --dry-run            Muestra los comandos sin ejecutarlos
+  --update              Actualiza a la ultima version las skills YA instaladas
+                        (no instala nuevas). Respeta --scope: global, project
+                        (en el directorio actual) o ambos si no pasas --scope
   --list                Lista el catalogo (categoria/skill/scope/stack/repo) y sale
   --copy                 Copia en vez de symlink (pasa --copy al CLI)
   -h, --help            Muestra esta ayuda
@@ -45,6 +49,7 @@ while [[ $# -gt 0 ]]; do
     --agents) AGENTS="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --list) LIST_ONLY=1; INTERACTIVE=0; shift ;;
+    --update) UPDATE_ONLY=1; INTERACTIVE=0; shift ;;
     --copy) USE_COPY=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Opcion desconocida: $1" >&2; usage; exit 1 ;;
@@ -77,7 +82,10 @@ matches_filter() {
 }
 
 PROJECT_PATH=""   # destino para skills scope=project (CWD del proyecto)
+OK_SKILLS=()      # skills instaladas correctamente
 FAILED_SKILLS=()  # skills que fallaron al instalar (no aborta la tanda)
+OK_UPDATES=()     # scopes actualizados correctamente
+FAILED_UPDATES=() # scopes cuya actualizacion fallo
 
 install_one() {
   local category="$1" repo="$2" skill="$3" scope="$4"
@@ -90,6 +98,7 @@ install_one() {
 
   if [[ $DRY_RUN -eq 1 ]]; then
     [[ -n "$run_dir" ]] && echo "(cd $run_dir && ${cmd[*]})" || echo "${cmd[*]}"
+    OK_SKILLS+=("$skill ($repo) [dry-run]")
     return
   fi
   echo "Instalando [$category/$scope] $skill desde $repo ..."
@@ -102,8 +111,68 @@ install_one() {
   if [[ $rc -ne 0 ]]; then
     echo "  ⚠ Fallo: $skill ($repo) — continuo con el resto." >&2
     FAILED_SKILLS+=("$skill ($repo)")
+  else
+    OK_SKILLS+=("$skill ($repo)")
   fi
 }
+
+# Resumen final: cuantas instalaciones/actualizaciones salieron bien y
+# cuantas no. Se llama antes de cada salida del script.
+print_summary() {
+  local n_ok=${#OK_SKILLS[@]} n_fail=${#FAILED_SKILLS[@]}
+  local n_uok=${#OK_UPDATES[@]} n_ufail=${#FAILED_UPDATES[@]}
+  [[ $((n_ok + n_fail + n_uok + n_ufail)) -eq 0 ]] && return
+
+  echo
+  echo "== Resumen =="
+  if [[ $((n_ok + n_fail)) -gt 0 ]]; then
+    echo "Instalaciones: $n_ok OK / $n_fail fallidas (total $((n_ok + n_fail)))"
+  fi
+  if [[ $((n_uok + n_ufail)) -gt 0 ]]; then
+    echo "Actualizaciones: $n_uok OK / $n_ufail fallidas (scopes: ${OK_UPDATES[*]:-}${FAILED_UPDATES[*]:+ ${FAILED_UPDATES[*]}})"
+  fi
+  if [[ $n_fail -gt 0 ]]; then
+    local f
+    for f in "${FAILED_SKILLS[@]}"; do
+      echo "  ✗ $f"
+    done
+    echo "Revisa el nombre del skill en skills.list contra 'npx skills add <repo> --list'."
+  fi
+  if [[ $n_ufail -gt 0 ]]; then
+    local u
+    for u in "${FAILED_UPDATES[@]}"; do
+      echo "  ✗ update scope=$u"
+    done
+  fi
+}
+
+# Actualiza las skills ya instaladas (el CLI las resuelve desde su propio
+# registro; no usa el manifiesto). scope: --global o --project.
+update_installed() {
+  local scope="$1"
+  local cmd=(npx skills update --yes)
+  [[ "$scope" == "global" ]] && cmd+=("--global") || cmd+=("--project")
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "${cmd[*]}"
+    OK_UPDATES+=("$scope")
+    return
+  fi
+  echo "Actualizando skills [$scope] ..."
+  if "${cmd[@]}"; then
+    OK_UPDATES+=("$scope")
+  else
+    echo "  ⚠ Fallo la actualizacion de scope=$scope" >&2
+    FAILED_UPDATES+=("$scope")
+  fi
+}
+
+if [[ $UPDATE_ONLY -eq 1 ]]; then
+  matches_filter "global" "$SCOPES" && update_installed "global" || true
+  matches_filter "project" "$SCOPES" && update_installed "project" || true
+  print_summary
+  exit 0
+fi
 
 # --- modo no interactivo: filtros clasicos / --list ---
 if [[ $INTERACTIVE -eq 0 ]]; then
@@ -135,6 +204,7 @@ if [[ $INTERACTIVE -eq 0 ]]; then
       echo "  scope=$local_scope: ${count_scope[$local_scope]}"
     done
   fi
+  print_summary
   exit 0
 fi
 
@@ -383,7 +453,7 @@ pick_agents() {
 pick_agents
 
 echo
-echo "Instalar: [1] Global  [2] Project (por stack)  [3] Ambos"
+echo "Instalar: [1] Global  [2] Project (por stack)  [3] Ambos  [4] Actualizar ya instaladas"
 read -rp "Opcion: " choice
 
 do_global=0
@@ -392,6 +462,12 @@ case "$choice" in
   1) do_global=1 ;;
   2) do_project=1 ;;
   3) do_global=1; do_project=1 ;;
+  4)
+    update_installed "global"
+    read -rp "Actualizar tambien las skills del proyecto en $PWD? [y/N]: " upd_proj
+    [[ "$upd_proj" == [yY]* ]] && update_installed "project"
+    print_summary
+    exit 0 ;;
   *) echo "Opcion invalida."; exit 1 ;;
 esac
 
@@ -409,11 +485,4 @@ if [[ $do_project -eq 1 ]]; then
   pick_and_install "project" "stack" "Project"
 fi
 
-if [[ ${#FAILED_SKILLS[@]} -gt 0 ]]; then
-  echo
-  echo "== ${#FAILED_SKILLS[@]} skill(s) fallaron =="
-  for f in "${FAILED_SKILLS[@]}"; do
-    echo "  ✗ $f"
-  done
-  echo "Revisa el nombre del skill en skills.list contra 'npx skills add <repo> --list'."
-fi
+print_summary
